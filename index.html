@@ -428,6 +428,13 @@
   setMode(state.mode || "pas");
   startTick();
 
+  // guarda la app en el móvil para abrirla sin internet (el vídeo sí necesita datos)
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", function () {
+      navigator.serviceWorker.register("sw.js").catch(function () {});
+    });
+  }
+
   setTimeout(function(){
     if(!ready){
       nowTitle.textContent = "Sin conexión con YouTube. Comprueba los datos del móvil.";
