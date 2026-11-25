@@ -1,10 +1,14 @@
 // FRILEA · Coche
 // - Guarda la app en el movil para abrirla sin internet (el video si necesita datos).
 // - Recoge el video cuando se comparte desde YouTube (Compartir -> Coche).
+//
+// OJO: la pagina (index.html) NO se guarda por adelantado. Si se guarda en la
+// instalacion, luego se sirve una copia vieja de la app. La pagina se coge
+// siempre de la red y solo se guarda como respaldo la ultima que funciono.
 
-var CACHE = "frilea-coche-v4";
+var CACHE = "frilea-coche-v5";
 var BASE = new URL("./", self.registration ? self.registration.scope : self.location.href).href;
-var ASSETS = [BASE, BASE + "index.html", BASE + "manifiesto.webmanifest", BASE + "icono-192.png", BASE + "icono-512.png"];
+var ASSETS = [BASE + "icono-192.png", BASE + "icono-512.png"];
 
 var PEND_CACHE = "frilea-pendiente";
 var PEND_KEY = "ultimo";
@@ -68,9 +72,10 @@ self.addEventListener("fetch", function (e) {
                  url.pathname.slice(-10) === "index.html";
 
   if (esPagina) {
-    // primero la red (para no quedarse con una version vieja), y si no hay, la copia guardada
+    // siempre de la red, saltandose cualquier copia guardada (para no servir una version vieja);
+    // si no hay internet, se usa la ultima copia que funciono
     e.respondWith(
-      fetch(req).then(function (r) {
+      fetch(req, { cache: "reload" }).then(function (r) {
         var cp = r.clone();
         caches.open(CACHE).then(function (c) { c.put(req, cp); });
         return r;

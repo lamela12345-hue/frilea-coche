@@ -7,6 +7,7 @@
 <link rel="manifest" href="manifiesto.webmanifest">
 <link rel="icon" href="icono-192.png">
 <link rel="apple-touch-icon" href="icono-192.png">
+<meta name="app-version" content="2026-11-23.6">
 <title>FRILEA · Coche</title>
 <style>
   :root{
@@ -405,8 +406,9 @@
 
   // Android no deja leer lo que haces en otra aplicación (por privacidad), así que el vídeo
   // llega por "Compartir": el service worker deja apuntado el enlace y aquí se recoge.
-  function recogerCompartido(){
+  function recogerCompartido(intento){
     if(!("caches" in window)) return;
+    intento = intento || 0;
     caches.open("frilea-pendiente").then(function(c){
       return c.match("ultimo").then(function(r){
         if(!r) return null;
@@ -414,7 +416,11 @@
         return r.text();
       });
     }).then(function(txt){
-      if(!txt) return;
+      if(!txt){
+        // puede que el service worker lo guarde en este mismo instante: reintentar unas veces
+        if(intento < 5) setTimeout(function(){ recogerCompartido(intento + 1); }, 350 * (intento + 1));
+        return;
+      }
       var o = null;
       try { o = JSON.parse(txt); } catch(e){}
       if(!o || !o.link) return;
