@@ -89,6 +89,13 @@
   .row button{background:var(--acc);border:0;color:#161006;font-weight:800;border-radius:10px;
     padding:0 16px;font-size:14px;cursor:pointer;white-space:nowrap}
   .hint{font-size:12px;color:var(--dim);margin-top:8px;line-height:1.5}
+  .big{width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--txt);
+    font-size:16px;font-weight:700;padding:15px 16px;border-radius:12px;cursor:pointer;
+    margin:0 0 6px;display:flex;align-items:center;justify-content:center;gap:8px}
+  .big:hover{border-color:var(--acc)}
+  .big:active{transform:scale(.99)}
+  .big + .hint{margin-top:0;margin-bottom:14px}
+  .big:last-of-type + .hint{margin-bottom:8px}
 
   .queue{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px}
   .queue h3{margin:0 0 10px;font-size:12px;letter-spacing:.1em;color:var(--dim);font-weight:700;text-transform:uppercase}
@@ -151,13 +158,21 @@
   </div>
 
   <div class="card">
-    <h3>Pegar un enlace de YouTube</h3>
-    <div class="row">
-      <input type="text" id="link" placeholder="https://youtu.be/...  o  .../playlist?list=...">
+    <h3>Añadir un vídeo</h3>
+
+    <button class="big" id="abrirYT">📺 Buscar en YouTube</button>
+    <div class="hint">Busca el vídeo, toca <b>Compartir</b> y elige <b>Coche</b>. El vídeo entra aquí
+      solo y se pone a reproducir. Es la forma más cómoda en el móvil.</div>
+
+    <button class="big" id="pegarPort">📋 Pegar el enlace que he copiado</button>
+    <div class="hint">Si en YouTube le diste a <b>Compartir → Copiar enlace</b>, toca aquí y entra solo.</div>
+
+    <div class="row" style="margin-top:12px">
+      <input type="text" id="link" placeholder="...o pega/escribe el enlace a mano">
       <button id="goL">Añadir</button>
     </div>
-    <div class="hint">Vale un vídeo suelto o una lista de reproducción. Para buscar, abre YouTube,
-      copia el enlace del vídeo y pégalo aquí. Lo añadido se queda guardado en este dispositivo.</div>
+    <div class="hint">Vale un vídeo suelto o una lista de reproducción. Lo que añadas se queda
+      guardado en este dispositivo.</div>
   </div>
 
   <div class="queue">
@@ -359,6 +374,54 @@
       if(e.code === "ArrowRight"){ seekBy(15); }
       if(e.code === "ArrowLeft"){ seekBy(-15); }
     });
+
+    // Abrir YouTube para buscar el vídeo
+    $("abrirYT").onclick = function(){
+      window.open("https://m.youtube.com/", "_blank");
+    };
+
+    // Pegar lo que se haya copiado en YouTube
+    $("pegarPort").onclick = function(){
+      if(!(navigator.clipboard && navigator.clipboard.readText)){
+        alert("Este navegador no deja leer lo copiado. Mantén pulsado en la casita de abajo y dale a Pegar.");
+        $("link").focus();
+        return;
+      }
+      navigator.clipboard.readText().then(function(txt){
+        var it = parseLink(txt);
+        if(it){ push(it); return; }
+        alert("Lo que hay copiado no parece un enlace de YouTube. En YouTube: Compartir y luego Copiar enlace.");
+        $("link").value = txt || "";
+        $("link").focus();
+      }).catch(function(){
+        alert("El móvil no me ha dejado leer lo copiado. Mantén pulsado en la casita de abajo y dale a Pegar.");
+        $("link").focus();
+      });
+    };
+
+    // Si venimos de "Compartir" desde YouTube, recoger el vídeo
+    recogerCompartido();
+  }
+
+  // Android no deja leer lo que haces en otra aplicación (por privacidad), así que el vídeo
+  // llega por "Compartir": el service worker deja apuntado el enlace y aquí se recoge.
+  function recogerCompartido(){
+    if(!("caches" in window)) return;
+    caches.open("frilea-pendiente").then(function(c){
+      return c.match("ultimo").then(function(r){
+        if(!r) return null;
+        c.delete("ultimo");
+        return r.text();
+      });
+    }).then(function(txt){
+      if(!txt) return;
+      var o = null;
+      try { o = JSON.parse(txt); } catch(e){}
+      if(!o || !o.link) return;
+      var it = parseLink(o.link);
+      if(it){ push(it); }
+      else { alert("No he reconocido el vídeo que has compartido: " + o.link); }
+    }).catch(function(){});
   }
 
   function setMode(m){

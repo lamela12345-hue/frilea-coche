@@ -1,11 +1,14 @@
 {
   "name": "FRILEA · Coche",
   "short_name": "Coche",
+  "id": "/frilea-coche/",
+  "scope": "./",
   "start_url": "./",
   "display": "standalone",
   "orientation": "any",
   "background_color": "#0b0e13",
   "theme_color": "#0b0e13",
+  "description": "Ver YouTube en el coche: modo pasajeros y modo conductor (solo audio).",
   "icons": [
     {
       "src": "icono-192.png",
@@ -19,5 +22,15 @@
       "type": "image/png",
       "purpose": "any"
     }
-  ]
+  ],
+  "share_target": {
+    "action": "./compartir",
+    "method": "GET",
+    "enctype": "application/x-www-form-urlencoded",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url"
+    }
+  }
 }
