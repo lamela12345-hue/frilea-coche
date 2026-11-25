@@ -494,7 +494,8 @@
   // guarda la app en el móvil para abrirla sin internet (el vídeo sí necesita datos)
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", function () {
-      navigator.serviceWorker.register("sw.js").catch(function () {});
+      // updateViaCache:"none" = no quedarse nunca con una versión vieja de la app
+      navigator.serviceWorker.register("sw.js", { updateViaCache: "none" }).catch(function () {});
     });
   }
 
